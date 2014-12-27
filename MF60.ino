@@ -1,4 +1,4 @@
-#include "MIDI.h"
+#include "MIDI_debug.h"
 
 #define PULSE_WIDTH_USEC 5
 #define ANALOG_READ_RATE 50
