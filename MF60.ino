@@ -6,6 +6,7 @@
 
 #define LOAD  2
 #define CLOCK 3
+
 #define READ0 4
 #define READ1 5
 #define READ2 6
@@ -48,8 +49,8 @@ void setup() {
 	pinMode(READ7, INPUT);
 
 	for (int i = 0; i < 64; ++i) {
-		pinStates[i]  = 0;
-		changed[i]    = 0;
+		pinStates[i]  = HIGH;
+		changed[i]    = HIGH;
 		debounce[i]   = 0;
 		debouncing[i] = false;
 	}
@@ -81,6 +82,15 @@ int readButtons() {
 		values[5] = digitalRead(READ5);
 		values[6] = digitalRead(READ6);
 		values[7] = digitalRead(READ7);
+
+//values[0] = HIGH;
+//values[1] = HIGH;
+//values[2] = HIGH;
+values[3] = HIGH;
+values[4] = HIGH;
+values[5] = HIGH;
+values[6] = HIGH;
+values[7] = HIGH;
 
 		digitalWrite(CLOCK, HIGH);
 		// delayMicroseconds(PULSE_WIDTH_USEC);
@@ -119,9 +129,9 @@ void loop() {
 	if (nChanged == 0) return;
 	for (int i = 0; i < nChanged; ++i) {
 		if (pinStates[changed[i]]) {
-			MIDI.sendNoteOn(pinToPadMap[changed[i]], 120, midiChannel);
-		} else {
 			MIDI.sendNoteOff(pinToPadMap[changed[i]], 0, midiChannel);
+		} else {
+			MIDI.sendNoteOn(pinToPadMap[changed[i]], 120, midiChannel);
 		}
 	}
 }
