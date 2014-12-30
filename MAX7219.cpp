@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "MAX7219.h"
 
 #define MAX7219_REG_noop        0x00
@@ -24,20 +25,24 @@ MAX_7219_Class::MAX_7219_Class() {
 }
 
 //▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-inline void maxPutByte(byte data) {
+/*inline void maxPutByte(byte data) {
 	for (byte mask = 128; mask > 0; mask >>= 1) {
 		digitalWrite(MAX7219_CLOCK, LOW);
 		digitalWrite(MAX7219_DATA, (data & mask) ? HIGH : LOW);
 		digitalWrite(MAX7219_CLOCK, HIGH);
 	}
-}
+}*/
 
 //▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
 void MAX_7219_Class::set(byte reg, byte data) { 
-	digitalWrite(MAX7219_LOAD, LOW);   // begin     
-	maxPutByte(reg);               // specify register
-	maxPutByte(data);              // put data   
-	digitalWrite(MAX7219_LOAD,HIGH);   // load
+	digitalWrite(MAX7219_LOAD, LOW);
+	/*
+	maxPutByte(reg);  // specify register
+	maxPutByte(data); // put data
+	*/
+	shiftOut(MAX7219_DATA, MAX7219_CLOCK, MSBFIRST, reg);
+	shiftOut(MAX7219_DATA, MAX7219_CLOCK, MSBFIRST, data);
+	digitalWrite(MAX7219_LOAD,HIGH);
 }
 
 //▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
