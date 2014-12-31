@@ -1,4 +1,10 @@
-/* code for max 7219 from maxim */
+
+//███████████████████████████████████████████████████
+//█████████████████████████░▄▄▄▄░█▀▄▄▄▀█▀▀░███▀▄▄▄▄▀█
+//█▄░▀▄▀▀▄▀█▀▄▄▄▄▀██▄░██░▄█████▀▄████▀▄███░███░████░█
+//██░██░██░█▀▄▄▄▄░████░░██████▀▄███▀▄█████░████▄▄▄▄░█
+//█▀░▀█░▀█░█▄▀▀▀▄░▀█▀░██░▀████░███░▀▀▀░█▀▀░▀▀█▀▀▀▀▄██
+//███████████████████████████████████████████████████
 
 #define MAX7219_REG_noop        0x00
 #define MAX7219_REG_digit0      0x01
@@ -21,7 +27,7 @@
 #define MAX7219_CLOCK 8
 
 
-inline void putByte(byte data) {
+inline void Max7219_putByte(byte data) {
 	/*for (byte mask = 128; mask > 0; mask >>= 1) {
 		digitalWrite(MAX7219_CLOCK, LOW);
 		digitalWrite(MAX7219_DATA, (data & mask) ? HIGH : LOW);
@@ -30,33 +36,31 @@ inline void putByte(byte data) {
 	shiftOut(MAX7219_DATA, MAX7219_CLOCK, MSBFIRST, data);
 }
 
-void maxSingle(byte reg, byte col) {    
+void Max7219_write(byte reg, byte col) {    
 	digitalWrite(MAX7219_LOAD, LOW);   // begin     
-	putByte(reg);                  // specify register
-	putByte(col);                  // put data   
+	Max7219_putByte(reg);                  // specify register
+	Max7219_putByte(col);                  // put data   
 	digitalWrite(MAX7219_LOAD,HIGH);   // and load
 }
 
-void setupMax() {
+void Max7219_begin() {
 	pinMode(MAX7219_DATA,  OUTPUT);
 	pinMode(MAX7219_CLOCK, OUTPUT);
 	pinMode(MAX7219_LOAD,  OUTPUT);
 
 	// initiation of the max 7219
-	maxSingle(MAX7219_REG_scanLimit,   0x07);      
-	maxSingle(MAX7219_REG_decodeMode,  0x00); // using an led matrix (not digits)
-	maxSingle(MAX7219_REG_shutdown,    0x01); // not in shutdown mode
-	maxSingle(MAX7219_REG_displayTest, 0x00); // no display test
+	Max7219_write(MAX7219_REG_scanLimit,   0x07);      
+	Max7219_write(MAX7219_REG_decodeMode,  0x00); // using an led matrix (not digits)
+	Max7219_write(MAX7219_REG_shutdown,    0x01); // not in shutdown mode
+	Max7219_write(MAX7219_REG_displayTest, 0x00); // no display test
 
-	for (int i = 1; i <= 8; ++i)  maxSingle(i, 0);  // empty registers, turn all LEDs off
+	for (int i = 1; i <= 8; ++i)  Max7219_write(i, 0);  // empty registers, turn all LEDs off
 
-	maxSingle(MAX7219_REG_intensity, 0x0f);   // range: 0x00 to 0x0f
+	Max7219_write(MAX7219_REG_intensity, 0x0f);   // range: 0x00 to 0x0f
 }
 
 void setup () {
-	setupMax();
-	// digitalWrite(13, HIGH);  
-	// beginSerial(9600);
+	Max7219_begin();
 }
 
 void loop () {
@@ -65,31 +69,31 @@ void loop () {
 	//------------ MAX LIGHT SHOW --------------
 
 	/*
-	maxSingle(1,1);    //  █ ░ ░ ░ ░ ░ ░ ░
-	maxSingle(2,2);    //  ░ █ ░ ░ ░ ░ ░ ░
-	maxSingle(3,4);    //  ░ ░ █ ░ ░ ░ ░ ░
-	maxSingle(4,8);    //  ░ ░ ░ █ ░ ░ ░ ░
-	maxSingle(5,16);   //  ░ ░ ░ ░ █ ░ ░ ░
-	maxSingle(6,32);   //  ░ ░ ░ ░ ░ █ ░ ░
-	maxSingle(7,64);   //  ░ ░ ░ ░ ░ ░ █ ░
-	maxSingle(8,128);  //  ░ ░ ░ ░ ░ ░ ░ █
+	Max7219_write(1,1);    //  █ ░ ░ ░ ░ ░ ░ ░
+	Max7219_write(2,2);    //  ░ █ ░ ░ ░ ░ ░ ░
+	Max7219_write(3,4);    //  ░ ░ █ ░ ░ ░ ░ ░
+	Max7219_write(4,8);    //  ░ ░ ░ █ ░ ░ ░ ░
+	Max7219_write(5,16);   //  ░ ░ ░ ░ █ ░ ░ ░
+	Max7219_write(6,32);   //  ░ ░ ░ ░ ░ █ ░ ░
+	Max7219_write(7,64);   //  ░ ░ ░ ░ ░ ░ █ ░
+	Max7219_write(8,128);  //  ░ ░ ░ ░ ░ ░ ░ █
 
 	delay(1000);
 
-	maxSingle(1,1);    //  █ ░ ░ ░ ░ ░ ░ ░
-	maxSingle(2,3);    //  █ █ ░ ░ ░ ░ ░ ░
-	maxSingle(3,7);    //  █ █ █ ░ ░ ░ ░ ░
-	maxSingle(4,15);   //  █ █ █ █ ░ ░ ░ ░
-	maxSingle(5,31);   //  █ █ █ █ █ ░ ░ ░
-	maxSingle(6,63);   //  █ █ █ █ █ █ ░ ░
-	maxSingle(7,127);  //  █ █ █ █ █ █ █ ░
-	maxSingle(8,255);  //  █ █ █ █ █ █ █ █
+	Max7219_write(1,1);    //  █ ░ ░ ░ ░ ░ ░ ░
+	Max7219_write(2,3);    //  █ █ ░ ░ ░ ░ ░ ░
+	Max7219_write(3,7);    //  █ █ █ ░ ░ ░ ░ ░
+	Max7219_write(4,15);   //  █ █ █ █ ░ ░ ░ ░
+	Max7219_write(5,31);   //  █ █ █ █ █ ░ ░ ░
+	Max7219_write(6,63);   //  █ █ █ █ █ █ ░ ░
+	Max7219_write(7,127);  //  █ █ █ █ █ █ █ ░
+	Max7219_write(8,255);  //  █ █ █ █ █ █ █ █
 
 	delay(1000);
 	*/
 
-	maxSingle(1, 128);
+	Max7219_write(1, 128);
 	delay(1000);
-	maxSingle(1, 64);
+	Max7219_write(1, 64);
 	delay(1000);
 }
