@@ -16,38 +16,31 @@
 #define MAX7219_REG_displayTest 0x0f
 
 
-int MAX_DATA  = 2;
-int MAX_LOAD  = 3;
-int MAX_CLOCK = 4;
+#define MAX7219_DATA  10
+#define MAX7219_LOAD  9
+#define MAX7219_CLOCK 8
 
 
-void putByte(byte data) {
-	byte i = 8;
-	byte mask;
-	while (i > 0) {
-		mask = 0x01 << (i - 1);      // get bitmask
-		digitalWrite( MAX_CLOCK, LOW);   // tick
-		if (data & mask){            // choose bit
-			digitalWrite(MAX_DATA, HIGH);// send 1
-		} else {
-			digitalWrite(MAX_DATA, LOW); // send 0
-		}
-		digitalWrite(MAX_CLOCK, HIGH);   // tock
-		--i;                         // move to lesser bit
-	}
+inline void putByte(byte data) {
+	/*for (byte mask = 128; mask > 0; mask >>= 1) {
+		digitalWrite(MAX7219_CLOCK, LOW);
+		digitalWrite(MAX7219_DATA, (data & mask) ? HIGH : LOW);
+		digitalWrite(MAX7219_CLOCK, HIGH);
+	}*/
+	shiftOut(MAX7219_DATA, MAX7219_CLOCK, MSBFIRST, data);
 }
 
 void maxSingle(byte reg, byte col) {    
-	digitalWrite(MAX_LOAD, LOW);   // begin     
+	digitalWrite(MAX7219_LOAD, LOW);   // begin     
 	putByte(reg);                  // specify register
 	putByte(col);                  // put data   
-	digitalWrite(MAX_LOAD,HIGH);   // and load
+	digitalWrite(MAX7219_LOAD,HIGH);   // and load
 }
 
 void setupMax() {
-	pinMode(MAX_DATA,  OUTPUT);
-	pinMode(MAX_CLOCK, OUTPUT);
-	pinMode(MAX_LOAD,  OUTPUT);
+	pinMode(MAX7219_DATA,  OUTPUT);
+	pinMode(MAX7219_CLOCK, OUTPUT);
+	pinMode(MAX7219_LOAD,  OUTPUT);
 
 	// initiation of the max 7219
 	maxSingle(MAX7219_REG_scanLimit,   0x07);      
