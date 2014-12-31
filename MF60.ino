@@ -39,6 +39,8 @@
 #define MAX7219_REG_displayTest 0x0f
 
 
+byte Max7219_registers[8];
+
 inline void Max7219_putByte(byte data) {
 	// TODO: don't know which version is faster
 	/*for (byte mask = 128; mask > 0; mask >>= 1) {
@@ -56,6 +58,20 @@ void Max7219_write(byte reg, byte data) {
 	digitalWrite(MAX7219_LOAD, HIGH);  // load
 }
 
+void Max7219_lightOn(byte led) {
+	byte reg = led / 8;
+	byte bit = led % 8;
+	Max7219_registers[reg] |= 1 << bit;
+	Max7219_write(reg + 1, Max7219_registers[reg]);
+}
+
+void Max7219_lightOff(byte led) {
+	byte reg = led / 8;
+	byte bit = led % 8;
+	Max7219_registers[reg] &= !(1 << bit);
+	Max7219_write(reg + 1, Max7219_registers[reg]);
+}
+
 void Max7219_begin() {
 	pinMode(MAX7219_DATA,  OUTPUT);
 	pinMode(MAX7219_CLOCK, OUTPUT);
@@ -67,7 +83,10 @@ void Max7219_begin() {
 	Max7219_write(MAX7219_REG_shutdown,    0x01); // not in shutdown mode
 	Max7219_write(MAX7219_REG_displayTest, 0x00); // no display test
 
-	for (int i = 1; i <= 8; ++i)  Max7219_write(i, 0);  // empty registers, turn all LEDs off
+	for (int i = 0; i < 8; ++i)  {
+		Max7219_write(i + 1, 0);  // empty registers, turn all LEDs off
+		Max7219_registers[i] = 0;
+	}
 
 	Max7219_write(MAX7219_REG_intensity, 0x0f);   // range: 0x00 to 0x0f
 }
@@ -194,11 +213,18 @@ void loop() {
 	for (int i = 0; i < nChanged; ++i) {
 		if (pinStates[changed[i]]) {
 			MIDI.sendNoteOn(pinToPadMap[changed[i]], 120, midiChannel);
-			Max7219_write(1, 128);
+			Max7219_lightOn(7);
 		} else {
 			MIDI.sendNoteOff(pinToPadMap[changed[i]], 0, midiChannel);
-			Max7219_write(1, 0);
+			Max7219_lightOff(7);
 		}
 	}
 }
+
+
+
+
+
+
+
 
