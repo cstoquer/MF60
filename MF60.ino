@@ -4,17 +4,14 @@
 #define ANALOG_READ_RATE 50
 #define DEBOUNCE_TRIGGER 8
 
-#define LOAD  2
-#define CLOCK 3
+#define CLOCK 2
+#define LOAD  3
 
-#define READ0 4
-#define READ1 5
-#define READ2 6
-#define READ3 7
-#define READ4 8
-#define READ5 9
-#define READ6 10
-#define READ7 11
+#define DATA0 4
+#define DATA1 5
+#define DATA2 6
+#define DATA3 7
+
 
 int   midiChannel = 1;
 
@@ -39,18 +36,14 @@ const int pinToPadMap[64] = {
 void setup() {
 	pinMode(LOAD,  OUTPUT);
 	pinMode(CLOCK, OUTPUT);
-	pinMode(READ0, INPUT);
-	pinMode(READ1, INPUT);
-	pinMode(READ2, INPUT);
-	pinMode(READ3, INPUT);
-	pinMode(READ4, INPUT);
-	pinMode(READ5, INPUT);
-	pinMode(READ6, INPUT);
-	pinMode(READ7, INPUT);
+	pinMode(DATA0, INPUT);
+	pinMode(DATA1, INPUT);
+	pinMode(DATA2, INPUT);
+	pinMode(DATA3, INPUT);
 
 	for (int i = 0; i < 64; ++i) {
-		pinStates[i]  = HIGH;
-		changed[i]    = HIGH;
+		pinStates[i]  = LOW;
+		changed[i]    = LOW;
 		debounce[i]   = 0;
 		debouncing[i] = false;
 	}
@@ -72,30 +65,22 @@ int readButtons() {
 	while (pin < 64) {
 		//-------------------------------------
 		// read shift registers values
-		int values[8];
+		int values[4];
 
-		values[0] = digitalRead(READ0);
-		values[1] = digitalRead(READ1);
-		values[2] = digitalRead(READ2);
-		values[3] = digitalRead(READ3);
-		values[4] = digitalRead(READ4);
-		values[5] = digitalRead(READ5);
-		values[6] = digitalRead(READ6);
-		values[7] = digitalRead(READ7);
+		values[0] = digitalRead(DATA0);
+		values[1] = digitalRead(DATA1);
+		values[2] = digitalRead(DATA2);
+		values[3] = digitalRead(DATA3);
 
-//values[0] = HIGH;
-//values[1] = HIGH;
-//values[2] = HIGH;
-values[3] = HIGH;
-values[4] = HIGH;
-values[5] = HIGH;
-values[6] = HIGH;
-values[7] = HIGH;
+//values[0] = LOW;
+//values[1] = LOW;
+values[2] = LOW;
+values[3] = LOW;
 
 		digitalWrite(CLOCK, HIGH);
 		// delayMicroseconds(PULSE_WIDTH_USEC);
 
-		for (int i = 0; i < 8; ++i) {
+		for (int i = 0; i < 4; ++i) {
 			// update and debounce value 1
 			if (pinStates[pin] != values[i]) {
 				// pin changed value
@@ -129,9 +114,9 @@ void loop() {
 	if (nChanged == 0) return;
 	for (int i = 0; i < nChanged; ++i) {
 		if (pinStates[changed[i]]) {
-			MIDI.sendNoteOff(pinToPadMap[changed[i]], 0, midiChannel);
-		} else {
 			MIDI.sendNoteOn(pinToPadMap[changed[i]], 120, midiChannel);
+		} else {
+			MIDI.sendNoteOff(pinToPadMap[changed[i]], 0, midiChannel);
 		}
 	}
 }
