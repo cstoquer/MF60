@@ -11,10 +11,11 @@
 #define HC165_DATA2 6
 #define HC165_DATA3 7
 
-
-#define MAX7219_DATA  10
-#define MAX7219_LOAD  9
 #define MAX7219_CLOCK 8
+#define MAX7219_LOAD  9
+#define MAX7219_DATA  10
+
+#define ARDUINO_ON_BOARD_LED 13
 
 //███████████████████████████████████████████████████
 //█████████████████████████ ▄▄▄▄ █▀▄▄▄▀█▀▀ ███▀▄▄▄▄▀█
@@ -41,14 +42,21 @@
 
 byte Max7219_registers[8];
 
+/* ---------------------------------------------
+ * BENCHMARK: Max7219_putByte
+ * ---------------------------------------------
+ * Arduino shiftOut function : 259 micro seconds
+ * custom shiftOut algorithm : 236 micro seconds
+ */
 inline void Max7219_putByte(byte data) {
-	// TODO: don't know which version is faster
-	/*for (byte mask = 128; mask > 0; mask >>= 1) {
+	// ---------- custom shift out ----------
+	for (byte mask = 128; mask > 0; mask >>= 1) {
 		digitalWrite(MAX7219_CLOCK, LOW);
 		digitalWrite(MAX7219_DATA, (data & mask) ? HIGH : LOW);
 		digitalWrite(MAX7219_CLOCK, HIGH);
-	}*/
-	shiftOut(MAX7219_DATA, MAX7219_CLOCK, MSBFIRST, data);
+	}
+	// ---------- Arduino shiftOut ----------
+	//shiftOut(MAX7219_DATA, MAX7219_CLOCK, MSBFIRST, data);
 }
 
 void Max7219_write(byte reg, byte data) {    
@@ -58,6 +66,11 @@ void Max7219_write(byte reg, byte data) {
 	digitalWrite(MAX7219_LOAD, HIGH);  // load
 }
 
+/* ---------------------------------------------
+ * BENCHMARK: Max7219_lightOn
+ * ---------------------------------------------
+ * with custom shift out : 240 micro seconds
+ */
 void Max7219_lightOn(byte led) {
 	byte reg = led / 8;
 	byte bit = led % 8;
@@ -137,7 +150,18 @@ void HC165_begin() {
 
 
 //▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-
+/* ---------------------------------------------
+ * BENCHMARK: readButtons
+ * ---------------------------------------------
+ *    with delayMicroseconds between LOAD
+ * ---------------------------------------------
+ * no button pressed : 598 micro seconds
+ * button pressed    : 600 micro seconds
+ * ---------------------------------------------
+ *   without delayMicroseconds between LOAD
+ * ---------------------------------------------
+ * no button pressed : 593 micro seconds
+ */
 int readButtons() {
 	int nChanged = 0;
 	int pin = 0;
@@ -203,12 +227,13 @@ void setup() {
 	HC165_begin();
 	Max7219_begin();
 	MIDI.begin();
+	//pinMode(ARDUINO_ON_BOARD_LED, OUTPUT);
 }
 
 //▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
 
 void loop() {
-	int nChanged = readButtons();
+	/*int nChanged = readButtons();
 	if (nChanged == 0) return;
 	for (int i = 0; i < nChanged; ++i) {
 		if (pinStates[changed[i]]) {
@@ -218,5 +243,19 @@ void loop() {
 			MIDI.sendNoteOff(pinToPadMap[changed[i]], 0, midiChannel);
 			Max7219_lightOff(7);
 		}
+	}*/
+	unsigned long start = micros();
+
+	for (int i = 0; i < 10000; ++i) {
+		readButtons();
 	}
+
+	unsigned long end = micros();
+	unsigned long delta = end - start;
+	Serial.println(delta);
+
 }
+
+
+
+
