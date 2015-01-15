@@ -45,10 +45,10 @@ byte Max7219_registers[8];
 /* ---------------------------------------------
  * BENCHMARK: Max7219_putByte
  * ---------------------------------------------
- * Arduino shiftOut function : 259 micro seconds
- * custom shiftOut algorithm : 236 micro seconds
+ * Arduino shiftOut function : 125 micro seconds, inline: 124 micro seconds
+ * custom shiftOut algorithm : 113 micro seconds, inline: 113 micro seconds
  */
-inline void Max7219_putByte(byte data) {
+void Max7219_putByte(byte data) {
 	// ---------- custom shift out ----------
 	for (byte mask = 128; mask > 0; mask >>= 1) {
 		digitalWrite(MAX7219_CLOCK, LOW);
@@ -56,9 +56,17 @@ inline void Max7219_putByte(byte data) {
 		digitalWrite(MAX7219_CLOCK, HIGH);
 	}
 	// ---------- Arduino shiftOut ----------
-	//shiftOut(MAX7219_DATA, MAX7219_CLOCK, MSBFIRST, data);
+	// shiftOut(MAX7219_DATA, MAX7219_CLOCK, MSBFIRST, data);
 }
 
+/* ---------------------------------------------
+ * BENCHMARK: Max7219_write
+ * ---------------------------------------------
+ * Arduino shiftOut function : 259 micro seconds
+ * custom shiftOut algorithm : 236 micro seconds
+ *
+ * => updating the whole matrix : 1888 micro sec.
+ */
 void Max7219_write(byte reg, byte data) {    
 	digitalWrite(MAX7219_LOAD, LOW);   // begin     
 	Max7219_putByte(reg);              // specify register
@@ -157,10 +165,11 @@ void HC165_begin() {
  * ---------------------------------------------
  * no button pressed : 598 micro seconds
  * button pressed    : 600 micro seconds
+ * with delayMicroseconds : + 5 micro seconds
  * ---------------------------------------------
- *   without delayMicroseconds between LOAD
- * ---------------------------------------------
- * no button pressed : 593 micro seconds
+ * inline version    : 620 micro seconds
+ * all SR in paralel : 520 micro seconds (use 4 more pins)
+ * MF24 comparison   : 260 micro seconds (only 24 buttons)
  */
 int readButtons() {
 	int nChanged = 0;
@@ -181,7 +190,8 @@ int readButtons() {
 		values[2] = digitalRead(HC165_DATA2);
 		values[3] = digitalRead(HC165_DATA3);
 
-		//values[0] = LOW;
+
+		// values[0] = LOW;
 		values[1] = LOW;
 		values[2] = LOW;
 		values[3] = LOW;
@@ -216,6 +226,24 @@ int readButtons() {
 	return nChanged;
 }
 
+
+//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+
+void benchmark() {
+	unsigned long start = micros();
+
+	for (int i = 0; i < 10000; ++i) {
+		// Max7219_lightOff(7);
+		// Max7219_putByte(5);
+		readButtons();
+	}
+
+	unsigned long end = micros();
+	unsigned long delta = end - start;
+	Serial.println(delta);
+}
+
+
 //█████████████████████████████████████████████████████
 //███▄ ███████████████▄ ████████████▄██████████████████
 //███ █ ███▄ ▀▄▄▄█▀▄▄▄▀ ██▄ ██▄ ██▄▄ ███▄ ▀▄▄▀██▀▄▄▄▄▀█
@@ -233,7 +261,8 @@ void setup() {
 //▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
 
 void loop() {
-	/*int nChanged = readButtons();
+	// benchmark();
+	int nChanged = readButtons();
 	if (nChanged == 0) return;
 	for (int i = 0; i < nChanged; ++i) {
 		if (pinStates[changed[i]]) {
@@ -243,19 +272,7 @@ void loop() {
 			MIDI.sendNoteOff(pinToPadMap[changed[i]], 0, midiChannel);
 			Max7219_lightOff(7);
 		}
-	}*/
-	unsigned long start = micros();
-
-	for (int i = 0; i < 10000; ++i) {
-		readButtons();
 	}
-
-	unsigned long end = micros();
-	unsigned long delta = end - start;
-	Serial.println(delta);
-
 }
-
-
 
 
